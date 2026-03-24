@@ -1,86 +1,172 @@
 import streamlit as st
-import random
-import time
+import streamlit.components.v1 as components
 
-# Grid size
-GRID_SIZE = 20
+st.set_page_config(layout="centered")
 
-# Initialize session state
-if "snake" not in st.session_state:
-    st.session_state.snake = [(10, 10), (10, 9), (10, 8)]
-    st.session_state.direction = "RIGHT"
-    st.session_state.food = (random.randint(0, 19), random.randint(0, 19))
-    st.session_state.game_over = False
+components.html("""
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+body {
+    margin: 0;
+    background-color: #111;
+    color: white;
+    text-align: center;
+    font-family: Arial;
+}
+canvas {
+    background-color: #222;
+    border: 2px solid #555;
+}
+#score {
+    font-size: 24px;
+    margin: 10px;
+}
+#gameover {
+    color: red;
+    font-size: 20px;
+    display: none;
+}
+button {
+    padding: 10px 20px;
+    font-size: 16px;
+    margin-top: 10px;
+}
+</style>
+</head>
 
-def move_snake():
-    head = st.session_state.snake[0]
-    x, y = head
+<body>
 
-    if st.session_state.direction == "UP":
-        new_head = (x - 1, y)
-    elif st.session_state.direction == "DOWN":
-        new_head = (x + 1, y)
-    elif st.session_state.direction == "LEFT":
-        new_head = (x, y - 1)
-    else:
-        new_head = (x, y + 1)
+<h2>🐍 Snake Game</h2>
+<div id="score">Score: 0</div>
+<div id="gameover">Game Over!</div>
+<canvas id="game" width="400" height="400"></canvas>
+<br>
+<button onclick="restartGame()">Restart</button>
 
-    # Check collision
-    if (
-        new_head in st.session_state.snake or
-        new_head[0] < 0 or new_head[0] >= GRID_SIZE or
-        new_head[1] < 0 or new_head[1] >= GRID_SIZE
-    ):
-        st.session_state.game_over = True
-        return
+<script>
+const canvas = document.getElementById("game");
+const ctx = canvas.getContext("2d");
 
-    st.session_state.snake.insert(0, new_head)
+const grid = 20;
+let snake, direction, food, score, gameOver;
+let gameInterval;
 
-    if new_head == st.session_state.food:
-        st.session_state.food = (
-            random.randint(0, 19),
-            random.randint(0, 19)
-        )
-    else:
-        st.session_state.snake.pop()
+// Start game
+function initGame() {
+    snake = [{x: 10, y: 10}];
+    direction = "RIGHT";
+    score = 0;
+    gameOver = false;
+    document.getElementById("score").innerText = "Score: 0";
+    document.getElementById("gameover").style.display = "none";
+    spawnFood();
+}
 
-def draw_grid():
-    grid = ""
-    for i in range(GRID_SIZE):
-        for j in range(GRID_SIZE):
-            if (i, j) in st.session_state.snake:
-                grid += "🟩"
-            elif (i, j) == st.session_state.food:
-                grid += "🍎"
-            else:
-                grid += "⬛"
-        grid += "\n"
-    st.text(grid)
+// Food spawn (fixed)
+function spawnFood() {
+    while (true) {
+        let newFood = {
+            x: Math.floor(Math.random() * 20),
+            y: Math.floor(Math.random() * 20)
+        };
 
-# Controls
-col1, col2, col3 = st.columns(3)
-with col1:
-    if st.button("⬅️"):
-        st.session_state.direction = "LEFT"
-with col2:
-    if st.button("⬆️"):
-        st.session_state.direction = "UP"
-with col3:
-    if st.button("➡️"):
-        st.session_state.direction = "RIGHT"
+        let onSnake = snake.some(s => s.x === newFood.x && s.y === newFood.y);
+        if (!onSnake) {
+            food = newFood;
+            return;
+        }
+    }
+}
 
-if st.button("⬇️"):
-    st.session_state.direction = "DOWN"
+// Controls
+document.addEventListener("keydown", function(e) {
+    if (e.key === "ArrowUp" && direction !== "DOWN") direction = "UP";
+    if (e.key === "ArrowDown" && direction !== "UP") direction = "DOWN";
+    if (e.key === "ArrowLeft" && direction !== "RIGHT") direction = "LEFT";
+    if (e.key === "ArrowRight" && direction !== "LEFT") direction = "RIGHT";
+});
 
-# Game loop simulation
-if not st.session_state.game_over:
-    move_snake()
-    draw_grid()
-    time.sleep(0.3)
-    st.rerun()
-else:
-    st.error("Game Over!")
-    if st.button("Restart"):
-        for key in list(st.session_state.keys()):
-            del st.session_state[key]
-        st.rerun()
+// Game loop using setInterval (fixed)
+function startGameLoop() {
+    clearInterval(gameInterval); // FIX: prevent multiple loops
+
+    gameInterval = setInterval(() => {
+        if (!gameOver) {
+            update();
+            draw();
+        }
+    }, 120);
+}
+
+// Update logic
+function update() {
+    let head = {...snake[0]};
+
+    if (direction === "UP") head.y--;
+    if (direction === "DOWN") head.y++;
+    if (direction === "LEFT") head.x--;
+    if (direction === "RIGHT") head.x++;
+
+    // Wall collision
+    if (head.x < 0 || head.y < 0 || head.x >= 20 || head.y >= 20) {
+        endGame();
+        return;
+    }
+
+    // Self collision
+    if (snake.some(part => part.x === head.x && part.y === head.y)) {
+        endGame();
+        return;
+    }
+
+    snake.unshift(head);
+
+    // Eat food
+    if (head.x === food.x && head.y === food.y) {
+        score++;
+        document.getElementById("score").innerText = "Score: " + score;
+        spawnFood();
+    } else {
+        snake.pop();
+    }
+}
+
+// Draw everything
+function draw() {
+    ctx.fillStyle = "#222";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    // Snake
+    ctx.fillStyle = "lime";
+    snake.forEach(part => {
+        ctx.fillRect(part.x * grid, part.y * grid, grid-2, grid-2);
+    });
+
+    // Food
+    ctx.fillStyle = "red";
+    ctx.fillRect(food.x * grid, food.y * grid, grid-2, grid-2);
+}
+
+// End game
+function endGame() {
+    gameOver = true;
+    document.getElementById("gameover").style.display = "block";
+}
+
+// Restart
+function restartGame() {
+    initGame();
+    startGameLoop();
+}
+
+// Initialize
+initGame();
+startGameLoop();
+
+</script>
+
+</body>
+</html>
+""", height=500)
