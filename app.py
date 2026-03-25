@@ -33,6 +33,39 @@ button {
     font-size: 16px;
     margin-top: 10px;
 }
+#overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+
+    background: rgba(0, 0, 0, 0.7);
+
+    display: none;
+    justify-content: center;
+    align-items: center;
+}
+
+#popup {
+    background: #1a1a1a;
+    padding: 30px;
+    border-radius: 15px;
+    text-align: center;
+    box-shadow: 0 0 20px #00ff88;
+}
+
+#popup h2 {
+    color: red;
+    margin-bottom: 10px;
+}
+
+#popup button {
+    padding: 10px 20px;
+    font-size: 16px;
+    margin-top: 10px;
+    cursor: pointer;
+}
 </style>
 </head>
 
@@ -45,7 +78,13 @@ button {
 
 <canvas id="game" width="400" height="400"></canvas>
 <br>
-<button onclick="restartGame()">Restart</button>
+<div id="overlay">
+    <div id="popup">
+        <h2>Game Over</h2>
+        <p id="finalScore"></p>
+        <button onclick="restartGame()">Play Again</button>
+    </div>
+</div>
 
 <script>
 const canvas = document.getElementById("game");
@@ -319,15 +358,17 @@ function draw() {
 // Game over
 function endGame() {
     gameOver = true;
-    document.getElementById("gameover").style.display = "block";
+
+    document.getElementById("overlay").style.display = "flex";
+    document.getElementById("finalScore").innerText = "Score: " + score;
 }
 
 // Restart
 function restartGame() {
+    document.getElementById("overlay").style.display = "none";
     initGame();
     startGameLoop();
 }
-
 // Start game
 initGame();
 startGameLoop();
