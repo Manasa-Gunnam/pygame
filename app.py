@@ -46,8 +46,8 @@ button {
 <button onclick="restartGame()">Restart</button>
 
 <script>
-const canvas = document.getElementById("game");
-const ctx = canvas.getContext("2d");
+canvas.setAttribute("tabindex", "0");
+canvas.focus();
 
 const grid = 20;
 let snake, direction, food, score, gameOver;
