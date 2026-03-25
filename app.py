@@ -66,12 +66,39 @@ button {
     margin-top: 10px;
     cursor: pointer;
 }
+.title {
+    font-size: 42px;
+    font-weight: bold;
+    letter-spacing: 3px;
+
+    background: linear-gradient(90deg, #00ff88, #00ccff, #00ff88);
+    background-size: 200% auto;
+
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+
+    animation: shine 3s linear infinite;
+
+    text-shadow: 0 0 10px rgba(0,255,136,0.6),
+                 0 0 20px rgba(0,255,136,0.4);
+
+    margin-top: 10px;
+}
+
+@keyframes shine {
+    to {
+        background-position: 200% center;
+    }
+}
+background: linear-gradient(90deg, red, orange, red);
+text-shadow: 0 0 5px #00ff88, 0 0 15px #00ff88, 0 0 30px #00ff88;
+<p> style="color: #aaa;">Eat. Grow. Survive.</p>
 </style>
 </head>
 
 <body>
 
-<h2>🐍 Snake Game</h2>
+<h1 class="title">🐍 SNAKE GAME</h1>
 <p>👉 Click the game area first, then use arrow keys or WASD</p>
 <div id="score">Score: 0</div>
 <div id="gameover">Game Over!</div>
