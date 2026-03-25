@@ -172,18 +172,82 @@ function update() {
     }
 }
 
-// Draw
 function draw() {
-    ctx.fillStyle = "#222";
+    // Background
+    ctx.fillStyle = "#111";
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    ctx.fillStyle = "lime";
-    snake.forEach(part => {
-        ctx.fillRect(part.x * grid, part.y * grid, grid - 2, grid - 2);
+    // 🐍 Draw Snake
+    snake.forEach((part, index) => {
+        const x = part.x * grid;
+        const y = part.y * grid;
+
+        // Gradient body
+        let gradient = ctx.createRadialGradient(
+            x + grid/2, y + grid/2, 2,
+            x + grid/2, y + grid/2, grid
+        );
+
+        gradient.addColorStop(0, "#7CFC00"); // light green center
+        gradient.addColorStop(1, "#228B22"); // darker edges
+
+        ctx.fillStyle = gradient;
+
+        // Rounded body
+        ctx.beginPath();
+        ctx.roundRect(x, y, grid - 2, grid - 2, 6);
+        ctx.fill();
+
+        // 👀 Draw eyes on head
+        if (index === 0) {
+            ctx.fillStyle = "white";
+
+            let eyeOffsetX = 4;
+            let eyeOffsetY = 4;
+
+            if (direction === "RIGHT") {
+                ctx.beginPath();
+                ctx.arc(x + 14, y + 6, 2, 0, Math.PI * 2);
+                ctx.arc(x + 14, y + 14, 2, 0, Math.PI * 2);
+                ctx.fill();
+            }
+            if (direction === "LEFT") {
+                ctx.beginPath();
+                ctx.arc(x + 4, y + 6, 2, 0, Math.PI * 2);
+                ctx.arc(x + 4, y + 14, 2, 0, Math.PI * 2);
+                ctx.fill();
+            }
+            if (direction === "UP") {
+                ctx.beginPath();
+                ctx.arc(x + 6, y + 4, 2, 0, Math.PI * 2);
+                ctx.arc(x + 14, y + 4, 2, 0, Math.PI * 2);
+                ctx.fill();
+            }
+            if (direction === "DOWN") {
+                ctx.beginPath();
+                ctx.arc(x + 6, y + 14, 2, 0, Math.PI * 2);
+                ctx.arc(x + 14, y + 14, 2, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
     });
 
-    ctx.fillStyle = "red";
-    ctx.fillRect(food.x * grid, food.y * grid, grid - 2, grid - 2);
+    // 🍎 Food (better look)
+    const fx = food.x * grid;
+    const fy = food.y * grid;
+
+    let foodGradient = ctx.createRadialGradient(
+        fx + grid/2, fy + grid/2, 2,
+        fx + grid/2, fy + grid/2, grid
+    );
+
+    foodGradient.addColorStop(0, "#ff4d4d");
+    foodGradient.addColorStop(1, "#990000");
+
+    ctx.fillStyle = foodGradient;
+    ctx.beginPath();
+    ctx.arc(fx + grid/2, fy + grid/2, grid/2 - 2, 0, Math.PI * 2);
+    ctx.fill();
 }
 
 // Game over
