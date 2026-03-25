@@ -1,7 +1,7 @@
 import streamlit as st
 import streamlit.components.v1 as components
 
-st.set_page_config(layout="centered")
+st.set_page_config(page_title="Snake Game", layout="centered")
 
 components.html("""
 <!DOCTYPE html>
@@ -52,19 +52,23 @@ const ctx = canvas.getContext("2d");
 const grid = 20;
 let snake, direction, food, score, gameOver;
 let gameInterval;
+let directionQueue = [];
 
-// Start game
+// Initialize game
 function initGame() {
     snake = [{x: 10, y: 10}];
     direction = "RIGHT";
+    directionQueue = [];
     score = 0;
     gameOver = false;
+
     document.getElementById("score").innerText = "Score: 0";
     document.getElementById("gameover").style.display = "none";
+
     spawnFood();
 }
 
-// Food spawn (fixed)
+// Spawn food safely
 function spawnFood() {
     while (true) {
         let newFood = {
@@ -72,36 +76,62 @@ function spawnFood() {
             y: Math.floor(Math.random() * 20)
         };
 
-        let onSnake = snake.some(s => s.x === newFood.x && s.y === newFood.y);
-        if (!onSnake) {
+        if (!snake.some(s => s.x === newFood.x && s.y === newFood.y)) {
             food = newFood;
             return;
         }
     }
 }
 
-// Controls
+// Controls (Arrow + WASD)
 document.addEventListener("keydown", function(e) {
-    if (e.key === "ArrowUp" && direction !== "DOWN") direction = "UP";
-    if (e.key === "ArrowDown" && direction !== "UP") direction = "DOWN";
-    if (e.key === "ArrowLeft" && direction !== "RIGHT") direction = "LEFT";
-    if (e.key === "ArrowRight" && direction !== "LEFT") direction = "RIGHT";
+    let newDir = null;
+
+    if (e.key === "ArrowUp" || e.key === "w") newDir = "UP";
+    if (e.key === "ArrowDown" || e.key === "s") newDir = "DOWN";
+    if (e.key === "ArrowLeft" || e.key === "a") newDir = "LEFT";
+    if (e.key === "ArrowRight" || e.key === "d") newDir = "RIGHT";
+
+    if (!newDir) return;
+
+    const lastDir = directionQueue.length > 0 
+        ? directionQueue[directionQueue.length - 1] 
+        : direction;
+
+    // Prevent reverse moves
+    if (
+        (newDir === "UP" && lastDir === "DOWN") ||
+        (newDir === "DOWN" && lastDir === "UP") ||
+        (newDir === "LEFT" && lastDir === "RIGHT") ||
+        (newDir === "RIGHT" && lastDir === "LEFT")
+    ) return;
+
+    directionQueue.push(newDir);
 });
 
-// Game loop using setInterval (fixed)
+// Dynamic speed
+function getSpeed() {
+    return Math.max(70, 120 - score * 2);
+}
+
+// Game loop
 function startGameLoop() {
-    clearInterval(gameInterval); // FIX: prevent multiple loops
+    clearInterval(gameInterval);
 
     gameInterval = setInterval(() => {
         if (!gameOver) {
             update();
             draw();
         }
-    }, 120);
+    }, getSpeed());
 }
 
 // Update logic
 function update() {
+    if (directionQueue.length > 0) {
+        direction = directionQueue.shift();
+    }
+
     let head = {...snake[0]};
 
     if (direction === "UP") head.y--;
@@ -109,13 +139,13 @@ function update() {
     if (direction === "LEFT") head.x--;
     if (direction === "RIGHT") head.x++;
 
-    // Wall collision
+    // Collision: wall
     if (head.x < 0 || head.y < 0 || head.x >= 20 || head.y >= 20) {
         endGame();
         return;
     }
 
-    // Self collision
+    // Collision: self
     if (snake.some(part => part.x === head.x && part.y === head.y)) {
         endGame();
         return;
@@ -128,25 +158,24 @@ function update() {
         score++;
         document.getElementById("score").innerText = "Score: " + score;
         spawnFood();
+        startGameLoop(); // update speed
     } else {
         snake.pop();
     }
 }
 
-// Draw everything
+// Draw game
 function draw() {
     ctx.fillStyle = "#222";
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    // Snake
     ctx.fillStyle = "lime";
     snake.forEach(part => {
-        ctx.fillRect(part.x * grid, part.y * grid, grid-2, grid-2);
+        ctx.fillRect(part.x * grid, part.y * grid, grid - 2, grid - 2);
     });
 
-    // Food
     ctx.fillStyle = "red";
-    ctx.fillRect(food.x * grid, food.y * grid, grid-2, grid-2);
+    ctx.fillRect(food.x * grid, food.y * grid, grid - 2, grid - 2);
 }
 
 // End game
@@ -161,7 +190,7 @@ function restartGame() {
     startGameLoop();
 }
 
-// Initialize
+// Start
 initGame();
 startGameLoop();
 
