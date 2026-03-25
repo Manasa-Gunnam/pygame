@@ -173,83 +173,149 @@ function update() {
 }
 
 function draw() {
-    // Background
-    ctx.fillStyle = "#111";
+    // 🌿 Background with subtle grid
+    ctx.fillStyle = "#0f1a0f";
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    // 🐍 Draw Snake
-    snake.forEach((part, index) => {
-        const x = part.x * grid;
-        const y = part.y * grid;
+    ctx.strokeStyle = "#1f2f1f";
+    for (let i = 0; i < canvas.width; i += grid) {
+        ctx.beginPath();
+        ctx.moveTo(i, 0);
+        ctx.lineTo(i, canvas.height);
+        ctx.stroke();
+
+        ctx.beginPath();
+        ctx.moveTo(0, i);
+        ctx.lineTo(canvas.width, i);
+        ctx.stroke();
+    }
+
+    // 🐍 Draw smooth snake body
+    for (let i = snake.length - 1; i >= 0; i--) {
+        const part = snake[i];
+        const x = part.x * grid + grid / 2;
+        const y = part.y * grid + grid / 2;
+
+        let radius = grid / 2 - 2;
+
+        // Tail smaller
+        if (i > snake.length - 4) {
+            radius *= 0.7;
+        }
+
+        // Head slightly bigger
+        if (i === 0) {
+            radius *= 1.2;
+        }
 
         // Gradient body
-        let gradient = ctx.createRadialGradient(
-            x + grid/2, y + grid/2, 2,
-            x + grid/2, y + grid/2, grid
-        );
-
-        gradient.addColorStop(0, "#7CFC00"); // light green center
-        gradient.addColorStop(1, "#228B22"); // darker edges
+        let gradient = ctx.createRadialGradient(x, y, 2, x, y, radius);
+        gradient.addColorStop(0, "#9eff6e");
+        gradient.addColorStop(1, "#1f7a1f");
 
         ctx.fillStyle = gradient;
 
-        // Rounded body
+        // Glow
+        ctx.shadowColor = "#00ff88";
+        ctx.shadowBlur = 8;
+
         ctx.beginPath();
-        ctx.roundRect(x, y, grid - 2, grid - 2, 6);
+        ctx.arc(x, y, radius, 0, Math.PI * 2);
         ctx.fill();
 
-        // 👀 Draw eyes on head
-        if (index === 0) {
-            ctx.fillStyle = "white";
+        ctx.shadowBlur = 0;
+    }
 
-            let eyeOffsetX = 4;
-            let eyeOffsetY = 4;
+    // 👀 Eyes (realistic with pupils)
+    const head = snake[0];
+    const hx = head.x * grid + grid / 2;
+    const hy = head.y * grid + grid / 2;
 
-            if (direction === "RIGHT") {
-                ctx.beginPath();
-                ctx.arc(x + 14, y + 6, 2, 0, Math.PI * 2);
-                ctx.arc(x + 14, y + 14, 2, 0, Math.PI * 2);
-                ctx.fill();
-            }
-            if (direction === "LEFT") {
-                ctx.beginPath();
-                ctx.arc(x + 4, y + 6, 2, 0, Math.PI * 2);
-                ctx.arc(x + 4, y + 14, 2, 0, Math.PI * 2);
-                ctx.fill();
-            }
-            if (direction === "UP") {
-                ctx.beginPath();
-                ctx.arc(x + 6, y + 4, 2, 0, Math.PI * 2);
-                ctx.arc(x + 14, y + 4, 2, 0, Math.PI * 2);
-                ctx.fill();
-            }
-            if (direction === "DOWN") {
-                ctx.beginPath();
-                ctx.arc(x + 6, y + 14, 2, 0, Math.PI * 2);
-                ctx.arc(x + 14, y + 14, 2, 0, Math.PI * 2);
-                ctx.fill();
-            }
-        }
+    let eyeOffsetX = 5;
+    let eyeOffsetY = 5;
+
+    ctx.fillStyle = "white";
+
+    let eyes = [];
+
+    if (direction === "RIGHT") {
+        eyes = [[hx + 6, hy - 5], [hx + 6, hy + 5]];
+    } else if (direction === "LEFT") {
+        eyes = [[hx - 6, hy - 5], [hx - 6, hy + 5]];
+    } else if (direction === "UP") {
+        eyes = [[hx - 5, hy - 6], [hx + 5, hy - 6]];
+    } else if (direction === "DOWN") {
+        eyes = [[hx - 5, hy + 6], [hx + 5, hy + 6]];
+    }
+
+    // Draw eyes
+    eyes.forEach(([ex, ey]) => {
+        ctx.beginPath();
+        ctx.arc(ex, ey, 3, 0, Math.PI * 2);
+        ctx.fill();
+
+        // pupils
+        ctx.fillStyle = "black";
+        ctx.beginPath();
+        ctx.arc(ex, ey, 1.5, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.fillStyle = "white";
     });
 
-    // 🍎 Food (better look)
-    const fx = food.x * grid;
-    const fy = food.y * grid;
+    // 👅 Tongue animation
+    if (Math.random() < 0.1) {
+        ctx.strokeStyle = "red";
+        ctx.lineWidth = 2;
 
-    let foodGradient = ctx.createRadialGradient(
-        fx + grid/2, fy + grid/2, 2,
-        fx + grid/2, fy + grid/2, grid
-    );
+        ctx.beginPath();
 
-    foodGradient.addColorStop(0, "#ff4d4d");
-    foodGradient.addColorStop(1, "#990000");
+        if (direction === "RIGHT") {
+            ctx.moveTo(hx + 8, hy);
+            ctx.lineTo(hx + 16, hy - 3);
+            ctx.moveTo(hx + 8, hy);
+            ctx.lineTo(hx + 16, hy + 3);
+        } else if (direction === "LEFT") {
+            ctx.moveTo(hx - 8, hy);
+            ctx.lineTo(hx - 16, hy - 3);
+            ctx.moveTo(hx - 8, hy);
+            ctx.lineTo(hx - 16, hy + 3);
+        } else if (direction === "UP") {
+            ctx.moveTo(hx, hy - 8);
+            ctx.lineTo(hx - 3, hy - 16);
+            ctx.moveTo(hx, hy - 8);
+            ctx.lineTo(hx + 3, hy - 16);
+        } else if (direction === "DOWN") {
+            ctx.moveTo(hx, hy + 8);
+            ctx.lineTo(hx - 3, hy + 16);
+            ctx.moveTo(hx, hy + 8);
+            ctx.lineTo(hx + 3, hy + 16);
+        }
 
-    ctx.fillStyle = foodGradient;
+        ctx.stroke();
+    }
+
+    // 🍎 Apple (realistic)
+    const fx = food.x * grid + grid / 2;
+    const fy = food.y * grid + grid / 2;
+
+    let appleGrad = ctx.createRadialGradient(fx, fy, 3, fx, fy, grid / 2);
+    appleGrad.addColorStop(0, "#ff6b6b");
+    appleGrad.addColorStop(1, "#8b0000");
+
+    ctx.fillStyle = appleGrad;
     ctx.beginPath();
-    ctx.arc(fx + grid/2, fy + grid/2, grid/2 - 2, 0, Math.PI * 2);
+    ctx.arc(fx, fy, grid / 2 - 2, 0, Math.PI * 2);
     ctx.fill();
-}
 
+    // Stem
+    ctx.strokeStyle = "#5a3d1e";
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(fx, fy - 8);
+    ctx.lineTo(fx, fy - 14);
+    ctx.stroke();
+}
 // Game over
 function endGame() {
     gameOver = true;
