@@ -84,8 +84,8 @@ function spawnFood() {
 }
 
 // Controls (Arrow + WASD)
-document.addEventListener("keydown", function(e) {
-    let newDir = null;
+canvas.addEventListener("keydown", function(e) {
+    e.preventDefault();
 
     if (e.key === "ArrowUp" || e.key === "w") newDir = "UP";
     if (e.key === "ArrowDown" || e.key === "s") newDir = "DOWN";
