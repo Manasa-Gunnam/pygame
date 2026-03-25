@@ -39,13 +39,19 @@ button {
 <body>
 
 <h2>🐍 Snake Game</h2>
+<p>👉 Click the game area first, then use arrow keys or WASD</p>
 <div id="score">Score: 0</div>
 <div id="gameover">Game Over!</div>
+
 <canvas id="game" width="400" height="400"></canvas>
 <br>
 <button onclick="restartGame()">Restart</button>
 
 <script>
+const canvas = document.getElementById("game");
+const ctx = canvas.getContext("2d");
+
+// 🔥 FIX: Enable keyboard focus
 canvas.setAttribute("tabindex", "0");
 canvas.focus();
 
@@ -54,7 +60,7 @@ let snake, direction, food, score, gameOver;
 let gameInterval;
 let directionQueue = [];
 
-// Initialize game
+// Init
 function initGame() {
     snake = [{x: 10, y: 10}];
     direction = "RIGHT";
@@ -68,7 +74,7 @@ function initGame() {
     spawnFood();
 }
 
-// Spawn food safely
+// Food spawn
 function spawnFood() {
     while (true) {
         let newFood = {
@@ -83,9 +89,11 @@ function spawnFood() {
     }
 }
 
-// Controls (Arrow + WASD)
+// 🎮 FIXED CONTROLS
 canvas.addEventListener("keydown", function(e) {
     e.preventDefault();
+
+    let newDir = null;
 
     if (e.key === "ArrowUp" || e.key === "w") newDir = "UP";
     if (e.key === "ArrowDown" || e.key === "s") newDir = "DOWN";
@@ -98,7 +106,7 @@ canvas.addEventListener("keydown", function(e) {
         ? directionQueue[directionQueue.length - 1] 
         : direction;
 
-    // Prevent reverse moves
+    // Prevent reverse
     if (
         (newDir === "UP" && lastDir === "DOWN") ||
         (newDir === "DOWN" && lastDir === "UP") ||
@@ -109,7 +117,7 @@ canvas.addEventListener("keydown", function(e) {
     directionQueue.push(newDir);
 });
 
-// Dynamic speed
+// Speed control
 function getSpeed() {
     return Math.max(70, 120 - score * 2);
 }
@@ -126,7 +134,7 @@ function startGameLoop() {
     }, getSpeed());
 }
 
-// Update logic
+// Update
 function update() {
     if (directionQueue.length > 0) {
         direction = directionQueue.shift();
@@ -139,13 +147,13 @@ function update() {
     if (direction === "LEFT") head.x--;
     if (direction === "RIGHT") head.x++;
 
-    // Collision: wall
+    // Wall collision
     if (head.x < 0 || head.y < 0 || head.x >= 20 || head.y >= 20) {
         endGame();
         return;
     }
 
-    // Collision: self
+    // Self collision
     if (snake.some(part => part.x === head.x && part.y === head.y)) {
         endGame();
         return;
@@ -164,7 +172,7 @@ function update() {
     }
 }
 
-// Draw game
+// Draw
 function draw() {
     ctx.fillStyle = "#222";
     ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -178,7 +186,7 @@ function draw() {
     ctx.fillRect(food.x * grid, food.y * grid, grid - 2, grid - 2);
 }
 
-// End game
+// Game over
 function endGame() {
     gameOver = true;
     document.getElementById("gameover").style.display = "block";
@@ -190,7 +198,7 @@ function restartGame() {
     startGameLoop();
 }
 
-// Start
+// Start game
 initGame();
 startGameLoop();
 
@@ -198,4 +206,4 @@ startGameLoop();
 
 </body>
 </html>
-""", height=500)
+""", height=520)
