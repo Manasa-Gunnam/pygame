@@ -66,6 +66,12 @@ button {
     margin-top: 10px;
     cursor: pointer;
 }
+<div id="controls">
+    <button onclick="setDirection('UP')">⬆️</button><br>
+    <button onclick="setDirection('LEFT')">⬅️</button>
+    <button onclick="setDirection('DOWN')">⬇️</button>
+    <button onclick="setDirection('RIGHT')">➡️</button>
+</div>
 .title {
     font-size: 42px;
     font-weight: bold;
@@ -93,6 +99,23 @@ button {
 background: linear-gradient(90deg, red, orange, red);
 text-shadow: 0 0 5px #00ff88, 0 0 15px #00ff88, 0 0 30px #00ff88;
 <p> style="color: #aaa;">Eat. Grow. Survive.</p>
+#controls {
+    margin-top: 15px;
+}
+
+#controls button {
+    font-size: 24px;
+    padding: 15px;
+    margin: 5px;
+    border-radius: 10px;
+    border: none;
+    background: #333;
+    color: white;
+}
+
+#controls button:active {
+    background: #00ff88;
+}
 </style>
 </head>
 
@@ -103,7 +126,15 @@ text-shadow: 0 0 5px #00ff88, 0 0 15px #00ff88, 0 0 30px #00ff88;
 <div id="score">Score: 0</div>
 <div id="gameover">Game Over!</div>
 
-<canvas id="game" width="400" height="400"></canvas>
+<canvas id="game"></canvas>
+function resizeCanvas() {
+    const size = Math.min(window.innerWidth * 0.9, 400);
+    canvas.width = size;
+    canvas.height = size;
+}
+
+window.addEventListener("resize", resizeCanvas);
+resizeCanvas();
 <br>
 <div id="overlay">
     <div id="popup">
@@ -114,6 +145,22 @@ text-shadow: 0 0 5px #00ff88, 0 0 15px #00ff88, 0 0 30px #00ff88;
 </div>
 
 <script>
+
+function setDirection(newDir) {
+    const lastDir = directionQueue.length > 0 
+        ? directionQueue[directionQueue.length - 1] 
+        : direction;
+
+    // Prevent reverse
+    if (
+        (newDir === "UP" && lastDir === "DOWN") ||
+        (newDir === "DOWN" && lastDir === "UP") ||
+        (newDir === "LEFT" && lastDir === "RIGHT") ||
+        (newDir === "RIGHT" && lastDir === "LEFT")
+    ) return;
+
+    directionQueue.push(newDir);
+}
 const canvas = document.getElementById("game");
 const ctx = canvas.getContext("2d");
 
